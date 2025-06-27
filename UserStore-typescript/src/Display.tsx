@@ -14,10 +14,23 @@ interface Game {
   imageUrl?: string;
 }
 
+interface Order {
+  id: string;
+  date: string;
+  name: string;
+  email: string;
+  items: Game[];
+  total: number;
+}
+
 const DisplayData = () => {
   const [games, setGames] = useState<Game[]>([]);
   const [filteredGenre, setFilteredGenre] = useState<string>('All');
   const [cart, setCart] = useState<Game[]>([]);
+  const [orderHistory, setOrderHistory] = useState<Order[]>(() => {
+    const stored = localStorage.getItem('orderHistory');
+    return stored ? JSON.parse(stored) : [];
+  });
 
   const [newTitle, setNewTitle] = useState('');
   const [newGenre, setNewGenre] = useState('');
@@ -73,12 +86,10 @@ const DisplayData = () => {
     const userName = user?.displayName || 'No Name';
     const userEmail = user?.email || 'No Email';
 
-    // Generate a simple random Order ID
+    // Generate Order ID and date
     const orderId = Math.random().toString(36).substr(2, 9).toUpperCase();
-
-    // Format current date/time nicely
     const now = new Date();
-    const formattedDate = now.toLocaleString(); // e.g. "6/26/2025, 8:34:21 PM"
+    const formattedDate = now.toLocaleString();
 
     const receipt = `
 RECEIPT
@@ -99,7 +110,30 @@ Thank you for your purchase!
 `;
 
     alert(receipt);
+
+    // Create order object
+    const newOrder: Order = {
+      id: orderId,
+      date: formattedDate,
+      name: userName,
+      email: userEmail,
+      items: cart,
+      total: totalAmount,
+    };
+
+    // Update order history state and localStorage
+    const updatedHistory = [newOrder, ...orderHistory];
+    setOrderHistory(updatedHistory);
+    localStorage.setItem('orderHistory', JSON.stringify(updatedHistory));
+
     clearCart();
+  };
+
+  // Delete a specific order from history
+  const deleteOrder = (orderId: string) => {
+    const updatedHistory = orderHistory.filter(order => order.id !== orderId);
+    setOrderHistory(updatedHistory);
+    localStorage.setItem('orderHistory', JSON.stringify(updatedHistory));
   };
 
   const uniqueGenres = ['All', ...Array.from(new Set(games.map((g) => g.genre)))];
@@ -135,7 +169,7 @@ Thank you for your purchase!
                   src={game.imageUrl}
                   alt={game.title}
                   className="card-img-top"
-                  style={{ objectFit: 'cover', height: '200px', width: '100%' }}
+                  style={{ objectFit: 'cover', height: 200, width: '100%' }}
                 />
               )}
               <div className="card-body">
@@ -259,6 +293,43 @@ Thank you for your purchase!
               Checkout
             </button>
           </>
+        )}
+      </div>
+
+      {/* Order History Section */}
+      <div className="mt-5">
+        <h3>Order History</h3>
+        {orderHistory.length === 0 ? (
+          <p>No past orders.</p>
+        ) : (
+          <ul className="list-group">
+            {orderHistory.map((order) => (
+              <li key={order.id} className="list-group-item d-flex justify-content-between align-items-start">
+                <div>
+                  <strong>Order ID:</strong> {order.id} <br />
+                  <strong>Date:</strong> {order.date} <br />
+                  <strong>Name:</strong> {order.name} <br />
+                  <strong>Email:</strong> {order.email} <br />
+                  <strong>Items:</strong>
+                  <ul>
+                    {order.items.map((game) => (
+                      <li key={game.id}>
+                        {game.title} - ${game.price.toFixed(2)}
+                      </li>
+                    ))}
+                  </ul>
+                  <strong>Total:</strong> ${order.total.toFixed(2)}
+                </div>
+                <button
+                  className="btn btn-danger btn-sm ms-3"
+                  onClick={() => deleteOrder(order.id)}
+                  title="Delete order"
+                >
+                  Delete
+                </button>
+              </li>
+            ))}
+          </ul>
         )}
       </div>
 
