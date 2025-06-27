@@ -14,7 +14,7 @@ const Login = () => {
     setError(null);
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      navigate("/add"); // ✅ redirect on login success
+      navigate("/formdata"); // ✅ redirect on login success
     } catch (err: any) {
       setError(err.message);
     }
