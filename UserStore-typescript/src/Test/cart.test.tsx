@@ -1,6 +1,6 @@
 import React from 'react';
-import { renderHook, act } from '@testing-library/react-hooks';
 import { CartProvider, useCart } from '../Cart'; // update path
+import { renderHook, act } from '@testing-library/react';
 
 const wrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   <CartProvider>{children}</CartProvider>
